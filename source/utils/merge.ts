@@ -373,6 +373,24 @@ const deepMergeInternal = <T>(isRoot: boolean, ...sources: Array<Partial<T> | un
 					throw new TypeError('The `headers` option must not be `null`. Use `undefined` to clear it.');
 				}
 
+				if (isRoot && key === 'proxy') {
+					if (value === null) {
+						throw new TypeError('The `proxy` option must not be `null`. Use `undefined` to clear it.');
+					}
+
+					returnValue = {...returnValue, proxy: value};
+					continue;
+				}
+
+				if (isRoot && key === 'dispatcher') {
+					if (value === null) {
+						throw new TypeError('The `dispatcher` option must not be `null`. Use `undefined` to clear it.');
+					}
+
+					returnValue = {...returnValue, dispatcher: value};
+					continue;
+				}
+
 				// Special handling for context - shallow merge only.
 				// Scoped to the root options level so it never rewrites nested user data that
 				// happens to contain a `context` key (e.g. a `json` request body).

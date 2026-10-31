@@ -69,6 +69,7 @@ export type {
 	ShouldRetryState,
 	SearchParamsOption,
 	Progress,
+	ProxyOptions,
 } from './types/options.js';
 
 export type {

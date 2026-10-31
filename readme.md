@@ -458,7 +458,32 @@ const data = await ky('https://example.com/data', {
 }).json();
 ```
 
+##### proxy
+
+Type: `string | URL | object | false`
+
+Proxy configuration for requests.
+
+Supported formats:
+- A URL string or `URL` object (e.g. `'http://proxy.example.com:8080'`).
+- An object with `url: string | URL` and optional `headers: Record<string, string>` (e.g. `{url: 'http://proxy.example.com:8080', headers: {'Proxy-Authorization': 'Bearer ...'}}`).
+- `false` to explicitly disable proxying.
+
+In **Bun**, this is passed directly to native `fetch()`.
+In **Node.js**, Ky automatically resolves this to an Undici `ProxyAgent` (requires `undici` installed).
+In **browsers**, passing this option throws a `TypeError` because the Fetch API does not permit client-side proxy configuration.
+
+```js
+import ky from 'ky';
+
+const response = await ky('https://example.com', {
+	proxy: 'http://proxy.example.com:8080'
+}).json();
+```
+
 ##### dispatcher
+
+Type: `unknown`
 
 An [undici](https://github.com/nodejs/undici) `Agent` or `Dispatcher`, forwarded to `fetch()` as-is. Ky does not use it, it just passes it through.
 
@@ -1556,9 +1581,34 @@ try {
 }
 ```
 
-### Proxy support (Node.js)
+### Proxy support
 
-#### Native proxy support
+#### Using the `proxy` option
+
+You can route requests through a proxy directly using the `proxy` option:
+
+```js
+import ky from 'ky';
+
+// URL string
+const response = await ky('https://example.com', {
+	proxy: 'http://proxy.example.com:8080'
+}).json();
+
+// Custom proxy headers (e.g. Proxy-Authorization)
+const response = await ky('https://example.com', {
+	proxy: {
+		url: 'http://proxy.example.com:8080',
+		headers: {
+			'Proxy-Authorization': 'Bearer token123'
+		}
+	}
+}).json();
+```
+
+In Bun, this is handled natively by `fetch()`. In Node.js, Ky automatically configures an Undici `ProxyAgent`.
+
+#### Native proxy support (Node.js)
 
 Node.js 24.5+ supports automatic proxy configuration via environment variables. Set `NODE_USE_ENV_PROXY=1` or use the `--use-env-proxy` CLI flag.
 

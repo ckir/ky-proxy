@@ -263,7 +263,7 @@ const response = await api.get('https://example.com/api');
 export const retry = (options?: ForceRetryOptions) => new RetryMarker(options);
 
 // Ky reads these again for every attempt, so a `beforeRetry` hook can change them without rebuilding the request.
-export const beforeRetryOptionKeys = ['onUploadProgress', 'onDownloadProgress', 'timeout', 'fetch', 'throwHttpErrors'] as const;
+export const beforeRetryOptionKeys = ['onUploadProgress', 'onDownloadProgress', 'timeout', 'fetch', 'throwHttpErrors', 'proxy', 'dispatcher'] as const;
 
 export const kyOptionKeys: KyOptionsRegistry = {
 	json: true,
@@ -282,6 +282,8 @@ export const kyOptionKeys: KyOptionsRegistry = {
 	onUploadProgress: true,
 	fetch: true,
 	context: true,
+	proxy: true,
+	dispatcher: true,
 };
 
 // Standard RequestInit options that should NOT be passed separately to fetch()

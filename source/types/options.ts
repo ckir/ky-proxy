@@ -435,6 +435,45 @@ export type KyOptions = {
 	@default {}
 	*/
 	context?: Record<string, unknown> | undefined;
+
+	/**
+	Proxy configuration for requests.
+
+	Accepts a URL string, a `URL` instance, an object with `url` and optional `headers`, or `false` to disable proxying.
+
+	In Bun, this is passed directly to native `fetch`.
+	In Node.js, this is resolved to an Undici `ProxyAgent`.
+	In browsers, setting this option throws a `TypeError` because the Fetch API does not permit client-side proxy configuration.
+
+	@example
+	```
+	import ky from 'ky';
+
+	const response = await ky('https://example.com', {
+		proxy: 'http://proxy.example.com:8080'
+	});
+	```
+	*/
+	proxy?: string | URL | ProxyOptions | false | undefined;
+
+	/**
+	Custom HTTP dispatcher (such as an Undici `Agent` or `ProxyAgent` in Node.js).
+
+	Passed directly to `fetch()` in environments that support it (such as Node.js).
+	*/
+	dispatcher?: unknown | undefined;
+};
+
+export type ProxyOptions = {
+	/**
+	The URL of the proxy server.
+	*/
+	url: string | URL;
+
+	/**
+	Custom headers to send to the proxy server (e.g. `Proxy-Authorization`).
+	*/
+	headers?: Record<string, string> | undefined;
 };
 
 /**
@@ -550,6 +589,8 @@ export interface NormalizedOptions extends Readonly<RequestInit> { // eslint-dis
 	readonly onDownloadProgress?: NonNullable<Options['onDownloadProgress']>;
 	readonly onUploadProgress?: NonNullable<Options['onUploadProgress']>;
 	readonly context: Record<string, unknown>;
+	readonly proxy?: Options['proxy'];
+	readonly dispatcher?: Options['dispatcher'];
 }
 
 export type {RetryOptions, ShouldRetryState} from './retry.js';

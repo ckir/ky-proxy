@@ -231,6 +231,40 @@ const validateCallbackOptions = (options: Record<string, unknown>): void => {
 	}
 };
 
+const validateProxyOptions = (options: Partial<Options>): void => {
+	const isBrowser = 'window' in globalThis && 'document' in globalThis;
+	if (isBrowser && options.proxy !== undefined && options.proxy !== false) {
+		throw new TypeError('The `proxy` option is not supported in browser environments.');
+	}
+
+	const {proxy, dispatcher} = options;
+
+	if (proxy !== undefined && proxy !== false) {
+		if (
+			typeof proxy !== 'string'
+			&& !(proxy instanceof URL)
+			&& (!isObject(proxy) || !('url' in proxy))
+		) {
+			throw new TypeError('The `proxy` option must be a string, URL, object with a `url` property, or `false`.');
+		}
+
+		if (isObject(proxy) && !(proxy instanceof URL)) {
+			const {url, headers} = proxy as {url?: unknown; headers?: unknown};
+			if (typeof url !== 'string' && !(url instanceof URL)) {
+				throw new TypeError('The `proxy.url` option must be a string or URL.');
+			}
+
+			if (headers !== undefined && !isNonArrayObject(headers)) {
+				throw new TypeError('The `proxy.headers` option must be an object.');
+			}
+		}
+	}
+
+	if (proxy !== undefined && proxy !== false && dispatcher !== undefined) {
+		throw new TypeError('Cannot specify both `proxy` and `dispatcher` options.');
+	}
+};
+
 const leadingC0ControlOrSpacePattern = /^[\0-\u0020]+/g;
 const asciiTabOrNewLinePattern = /[\t\n\r]/g;
 const schemePattern = /^[a-z][\d+.a-z-]*:/i;
@@ -447,6 +481,7 @@ export class Ky {
 	readonly #userProvidedAbortSignal: AbortSignal | undefined;
 	readonly #beforeRetryHookErrors = new WeakSet<Error>();
 	#cachedNormalizedOptions: NormalizedOptions | undefined;
+	readonly #isCustomFetch: boolean;
 	// When the `totalTimeout` budget runs out, or `Infinity` without a `totalTimeout`.
 	readonly #deadline: number;
 	// Responses returned by a `beforeRequest` or `beforeRetry` hook. They are used as-is, so a failing status throws instead of being retried.
@@ -471,7 +506,7 @@ export class Ky {
 		}
 
 		// An `init` hook assigns straight onto the options object, so these are checked here, after every merge and hook. The defaults below would otherwise quietly turn a `null` into `GET`, no prefix, or the referrer of a `Request` input.
-		for (const key of ['headers', 'method', 'prefix', 'baseUrl', 'referrer', 'referrerPolicy'] as const) {
+		for (const key of ['headers', 'method', 'prefix', 'baseUrl', 'referrer', 'referrerPolicy', 'proxy', 'dispatcher'] as const) {
 			if (options[key] === null) {
 				throw new TypeError(`The \`${key}\` option must not be \`null\`. Use \`undefined\` to clear it.`);
 			}
@@ -498,9 +533,11 @@ export class Ky {
 		};
 		// Checked here rather than on the way out, because the constructor already calls `stringifyJson`.
 		validateCallbackOptions(this.#options);
+		validateProxyOptions(this.#options);
 		validateTimeoutOption(this.#options.timeout, 'timeout');
 		validateTimeoutOption(totalTimeout, 'totalTimeout');
 		this.#retryLimit = this.#options.retry.limit;
+		this.#isCustomFetch = options.fetch !== undefined;
 
 		if (maxResponseSize !== Number.POSITIVE_INFINITY && (!Number.isSafeInteger(maxResponseSize) || maxResponseSize < 0)) {
 			throw new TypeError('The `maxResponseSize` option must be a non-negative safe integer or Infinity');
@@ -1220,6 +1257,37 @@ export class Ky {
 		cancelBody(this.#originalRequest, this.request);
 
 		const nonRequestOptions = findUnknownOptions(this.#options);
+		let {dispatcher} = this.#options;
+		const {proxy} = this.#options;
+
+		if (proxy !== undefined) {
+			nonRequestOptions['proxy'] = proxy;
+		}
+
+		if (dispatcher !== undefined) {
+			nonRequestOptions['dispatcher'] = dispatcher;
+		} else if (proxy !== undefined && proxy !== false) {
+			// eslint-disable-next-line n/prefer-global/process
+			const isNode = typeof process !== 'undefined' && process.release?.name === 'node';
+			if (isNode) {
+				try {
+					// @ts-expect-error - Undici may be available in the environment.
+					const {ProxyAgent} = await import('undici');
+					const proxyUrl = typeof proxy === 'object' && 'url' in proxy ? proxy.url : proxy;
+					const proxyHeaders = typeof proxy === 'object' && 'headers' in proxy ? proxy.headers : undefined;
+					dispatcher = new ProxyAgent({
+						uri: proxyUrl instanceof URL ? proxyUrl.href : String(proxyUrl),
+						headers: proxyHeaders,
+					});
+					nonRequestOptions['dispatcher'] = dispatcher;
+				} catch {
+					if (!this.#isCustomFetch) {
+						throw new Error('To use the `proxy` option in Node.js, please install `undici` or pass a custom `dispatcher`.');
+					}
+				}
+			}
+		}
+
 		this.#retryLimit = normalizeRetryOptions(this.#options.retry).limit;
 		// Reattach the managed signal because Node.js can garbage-collect the abort controller used by Request.clone().
 		const retryRequest = this.#retryLimit > 0 ? this.#withManagedSignal(this.request.clone()) : undefined;
@@ -1295,7 +1363,14 @@ export class Ky {
 			}
 		}
 
+		for (const key of ['proxy', 'dispatcher'] as const) {
+			if ((options as Record<string, unknown>)[key] === null) {
+				throw new TypeError(`The \`${key}\` option must not be \`null\`. Use \`undefined\` to clear it.`);
+			}
+		}
+
 		const mergedOptions = {...this.#options, ...options};
+		validateProxyOptions(mergedOptions);
 		const updatedOptions = {...mergedOptions, ...withAttemptDefaults(mergedOptions)};
 		validateCallbackOptions(updatedOptions);
 		validateTimeoutOption(updatedOptions.timeout, 'timeout');
