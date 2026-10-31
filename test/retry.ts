@@ -754,7 +754,7 @@ test.serial('invalid Retry-After HTTP-date components fall back to retry delay',
 	t.is(retryServer.requestCount, 2);
 });
 
-test('RateLimit-Reset delay seconds are respected like Retry-After', async t => {
+test.serial('RateLimit-Reset delay seconds are respected like Retry-After', async t => {
 	let requestCount = 0;
 
 	const server = await createHttpTestServer(t);

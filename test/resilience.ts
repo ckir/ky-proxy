@@ -249,7 +249,7 @@ test('aborting during the default exponential backoff settles promptly', async t
 	t.is(transport.attempts, 1);
 });
 
-test('aborting during the second backoff stops after two attempts', async t => {
+test.serial('aborting during the second backoff stops after two attempts', async t => {
 	const transport = scriptedFetch([busy(), busy(), ready()]);
 	const controller = new AbortController();
 	const api = client(transport, {retry: {delay: attemptCount => attemptCount === 1 ? 10 : 1000}});
@@ -281,7 +281,7 @@ test('aborting during the backoff after a network error rejects with the abort r
 	t.is(transport.attempts, 1);
 });
 
-test('aborting during the backoff after a timed out attempt rejects with the abort reason', async t => {
+test.serial('aborting during the backoff after a timed out attempt rejects with the abort reason', async t => {
 	const transport = scriptedFetch(['hang']);
 	const controller = new AbortController();
 
@@ -552,7 +552,7 @@ test('totalTimeout aborts a hung first attempt when the per-attempt timeout is d
 	t.is(transport.active, 0);
 });
 
-test('each request on an instance gets a fresh totalTimeout budget', async t => {
+test.serial('each request on an instance gets a fresh totalTimeout budget', async t => {
 	const transport = scriptedFetch([busy(), ready('one'), busy(), ready('two')]);
 	const api = client(transport, {totalTimeout: 500, retry: {delay: () => 120}});
 
@@ -747,7 +747,7 @@ const hookCases: Array<{title: string; options: (throwOnce: () => void) => Optio
 ];
 
 for (const {title, options} of hookCases) {
-	test(`an error thrown from ${title} reaches the caller unchanged and is not retried`, async t => {
+	test.serial(`an error thrown from ${title} reaches the caller unchanged and is not retried`, async t => {
 		const transport = scriptedFetch([busy(), busy(), ready('healthy')]);
 		const sentinel = new Error(`sentinel: ${title}`);
 		let armed = true;
@@ -982,17 +982,23 @@ test('retry over real HTTP recovers after two 503 responses', async t => {
 	t.deepEqual(arrivals, ['/flaky', '/flaky', '/flaky']);
 });
 
-test('a timeout over real HTTP closes the hung connection and the next request still works', async t => {
+test.serial('a timeout over real HTTP closes the hung connection and the next request still works', async t => {
 	const server = await createHttpTestServer(t);
+	const {promise: arrived, resolve: markArrived} = Promise.withResolvers<void>();
 	const {promise: closed, resolve: markClosed} = Promise.withResolvers<void>();
 	server.get('/slow', (_request, response) => {
+		markArrived();
 		response.once('close', markClosed);
 	});
 	server.get('/', (_request, response) => {
 		response.end('ready');
 	});
 
-	await t.throwsAsync(ky(`${server.url}/slow`, {timeout: 100, retry: 0}), {instanceOf: TimeoutError});
+	const result = ky(`${server.url}/slow`, {timeout: 1000, retry: 0}).then(() => 'resolved', (error: unknown) => error);
+	// The connection can take a moment to reach the server. Wait for it before the deadline
+	// expires, otherwise there is no hung connection for the timeout to close.
+	await withinTwoSeconds(arrived, 'The request did not reach the hung server');
+	t.true((await result) instanceof TimeoutError);
 	await withinTwoSeconds(closed, 'The hung connection was not closed');
 	t.is(await ky(server.url).text(), 'ready');
 });
