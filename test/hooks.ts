@@ -1069,7 +1069,7 @@ test('beforeRequest hook on initial request cannot bypass totalTimeout budget', 
 	t.is(fetchCallCount, 0);
 });
 
-test('totalTimeout bounds a never-ending beforeRequest hook', async t => {
+test.serial('totalTimeout bounds a never-ending beforeRequest hook', async t => {
 	let markHookStarted: () => void;
 	const hookStarted = new Promise<void>(resolve => {
 		markHookStarted = resolve;
@@ -1136,7 +1136,7 @@ test.serial('totalTimeout rejects a hook result produced after the deadline', as
 	t.true(didCancelBody);
 });
 
-test('totalTimeout cancels a hook response produced after the timer wins', async t => {
+test.serial('totalTimeout cancels a hook response produced after the timer wins', async t => {
 	let resolveHook: (response: Response) => void;
 	let didCancelBody = false;
 	let markHookStarted: () => void;
@@ -1196,7 +1196,7 @@ test.serial('totalTimeout takes precedence over a hook error produced after the 
 	);
 });
 
-test('totalTimeout bounds a never-ending afterResponse hook', async t => {
+test.serial('totalTimeout bounds a never-ending afterResponse hook', async t => {
 	let markHookStarted: () => void;
 	let didAbort = false;
 	const hookStarted = new Promise<void>(resolve => {
@@ -1236,7 +1236,7 @@ test('totalTimeout bounds a never-ending afterResponse hook', async t => {
 	t.true(didAbort);
 });
 
-test('totalTimeout during an afterResponse hook releases the fetched body and the response the hook returns later', async t => {
+test.serial('totalTimeout during an afterResponse hook releases the fetched body and the response the hook returns later', async t => {
 	let didHookStart = false;
 	let didCancelFetchedBody = false;
 	let didCancelHookBody = false;
@@ -1560,7 +1560,7 @@ test('beforeRetry hook can cancel retries by returning `stop`', async t => {
 	t.is(requestCount, 1);
 });
 
-test('beforeRetry hook respects totalTimeout budget', async t => {
+test.serial('beforeRetry hook respects totalTimeout budget', async t => {
 	let fetchCallCount = 0;
 	let beforeRetryCallCount = 0;
 
@@ -3624,7 +3624,7 @@ test('afterResponse hook can force retry with ky.retry()', async t => {
 	t.is(requestCount, 2); // Initial request + 1 retry
 });
 
-test('afterResponse hook forced retry does not await cancellation when hook clones response', async t => {
+test.serial('afterResponse hook forced retry does not await cancellation when hook clones response', async t => {
 	t.timeout(1000);
 
 	let requestCount = 0;

@@ -2365,7 +2365,7 @@ test('throwHttpErrors option with POST', async t => {
 	await t.notThrowsAsync(ky.post(server.url, {throwHttpErrors: false}).text());
 });
 
-test('throwHttpErrors:false does not suppress timeout errors', async t => {
+test.serial('throwHttpErrors:false does not suppress timeout errors', async t => {
 	let requestCount = 0;
 
 	const server = await createHttpTestServer(t);

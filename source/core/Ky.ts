@@ -446,7 +446,7 @@ export class Ky {
 							return jsonValue;
 						}
 
-						// eslint-disable-next-line no-return-await, @typescript-eslint/return-await -- Awaiting here preserves the caller's async stack when schema validation fails.
+						// eslint-disable-next-line @typescript-eslint/return-await -- Awaiting here preserves the caller's async stack when schema validation fails.
 						return await validateJsonWithSchema(jsonValue, schema);
 					});
 				} catch (error: unknown) {
@@ -1267,8 +1267,9 @@ export class Ky {
 		if (dispatcher !== undefined) {
 			nonRequestOptions['dispatcher'] = dispatcher;
 		} else if (proxy !== undefined && proxy !== false) {
-			// eslint-disable-next-line n/prefer-global/process
-			const isNode = typeof process !== 'undefined' && process.release?.name === 'node';
+			// TypeScript 6 no longer includes `@types/node` automatically, so read `process` without requiring Node globals.
+			const nodeProcess = (globalThis as {process?: {release?: {name?: string}}}).process;
+			const isNode = nodeProcess?.release?.name === 'node';
 			if (isNode) {
 				try {
 					// @ts-expect-error - Undici may be available in the environment.

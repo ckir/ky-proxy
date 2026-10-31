@@ -232,7 +232,6 @@ test('form-data automatic `content-type` header', async t => {
 		})
 		.json<IncomingHttpHeaders>();
 
-	// eslint-disable-next-line ava/assertion-arguments
 	t.true(headers['content-type'].startsWith('multipart/form-data; boundary='), headers['content-type']);
 });
 
@@ -270,7 +269,6 @@ test('form-data automatic `content-type` header with search params', async t => 
 		})
 		.json<IncomingHttpHeaders>();
 
-	// eslint-disable-next-line ava/assertion-arguments
 	t.true(headers['content-type'].startsWith('multipart/form-data; boundary='), headers['content-type']);
 });
 
