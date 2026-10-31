@@ -3,7 +3,10 @@
 	"version": "2.2.0",
 	"description": "Tiny and elegant HTTP client based on the Fetch API",
 	"license": "MIT",
-	"repository": "ckir/ky-proxy",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ckir/ky-proxy.git"
+	},
 	"funding": "https://github.com/sindresorhus/ky?sponsor=1",
 	"author": {
 		"name": "Sindre Sorhus",
