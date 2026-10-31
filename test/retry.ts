@@ -2635,7 +2635,7 @@ test('retryOnTimeout: each retry gets the full per-attempt timeout', async t => 
 	t.is(requestCount, 3);
 });
 
-test('totalTimeout takes precedence over retry limit', async t => {
+test.serial('totalTimeout takes precedence over retry limit', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -2663,7 +2663,7 @@ test('totalTimeout takes precedence over retry limit', async t => {
 	t.true(requestCount >= 1 && requestCount <= 2);
 });
 
-test('shouldRetry: returns true cannot exceed totalTimeout budget', async t => {
+test.serial('shouldRetry: returns true cannot exceed totalTimeout budget', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -2690,7 +2690,7 @@ test('shouldRetry: returns true cannot exceed totalTimeout budget', async t => {
 	t.true(requestCount >= 1 && requestCount <= 2);
 });
 
-test('totalTimeout bounds a never-ending shouldRetry callback', async t => {
+test.serial('totalTimeout bounds a never-ending shouldRetry callback', async t => {
 	let markCallbackStarted: () => void;
 	const callbackStarted = new Promise<void>(resolve => {
 		markCallbackStarted = resolve;
@@ -2923,7 +2923,7 @@ test('each retry gets the full per-attempt timeout (not a shared budget)', async
 	t.is(requestCount, 2);
 });
 
-test('Retry-After delay is bounded by totalTimeout budget', async t => {
+test.serial('Retry-After delay is bounded by totalTimeout budget', async t => {
 	let requestCount = 0;
 	const server = await createHttpTestServer(t);
 	server.get('/', (_request, response) => {
@@ -3163,7 +3163,7 @@ test('shouldRetry: error propagates if shouldRetry returns rejected Promise', as
 	);
 });
 
-test('totalTimeout with timeout: false - per-attempt disabled, total enabled', async t => {
+test.serial('totalTimeout with timeout: false - per-attempt disabled, total enabled', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -3191,7 +3191,7 @@ test('totalTimeout with timeout: false - per-attempt disabled, total enabled', a
 	t.is(requestCount, 2);
 });
 
-test('totalTimeout with timeout: false - exceeds total budget', async t => {
+test.serial('totalTimeout with timeout: false - exceeds total budget', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -3218,7 +3218,7 @@ test('totalTimeout with timeout: false - exceeds total budget', async t => {
 	t.is(requestCount, 1);
 });
 
-test('totalTimeout bounds hanging HTTPError body reads when timeout is disabled', async t => {
+test.serial('totalTimeout bounds hanging HTTPError body reads when timeout is disabled', async t => {
 	t.timeout(2000);
 	let requestCount = 0;
 	let hookError: Error | undefined;
@@ -3267,7 +3267,7 @@ test('totalTimeout bounds hanging HTTPError body reads when timeout is disabled'
 	t.true(hookError instanceof TimeoutError);
 });
 
-test('totalTimeout bounds hanging HTTPError body reads when timeout is larger', async t => {
+test.serial('totalTimeout bounds hanging HTTPError body reads when timeout is larger', async t => {
 	t.timeout(2000);
 	let requestCount = 0;
 
@@ -3350,7 +3350,7 @@ test.serial('totalTimeout is rechecked after per-attempt HTTPError body timeout'
 	t.true(performanceNowCallCount >= 4);
 });
 
-test('totalTimeout bounds hanging HTTPError parseJson when timeout is disabled', async t => {
+test.serial('totalTimeout bounds hanging HTTPError parseJson when timeout is disabled', async t => {
 	t.timeout(2000);
 	let requestCount = 0;
 
@@ -3383,7 +3383,7 @@ test('totalTimeout bounds hanging HTTPError parseJson when timeout is disabled',
 	t.is(requestCount, 1);
 });
 
-test('totalTimeout smaller than timeout - effective timeout is capped', async t => {
+test.serial('totalTimeout smaller than timeout - effective timeout is capped', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -3440,7 +3440,7 @@ test('totalTimeout exceeding maxSafeTimeout throws RangeError', async t => {
 	});
 });
 
-test('totalTimeout expires mid-delay between retries', async t => {
+test.serial('totalTimeout expires mid-delay between retries', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -3467,7 +3467,7 @@ test('totalTimeout expires mid-delay between retries', async t => {
 	t.is(requestCount, 1);
 });
 
-test('totalTimeout caps total time while timeout caps each attempt', async t => {
+test.serial('totalTimeout caps total time while timeout caps each attempt', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -3495,7 +3495,7 @@ test('totalTimeout caps total time while timeout caps each attempt', async t => 
 	t.true(requestCount >= 2 && requestCount < 10, `Expected totalTimeout to allow retries but cap below the retry limit, got ${requestCount}`);
 });
 
-test('totalTimeout works with ky.create()', async t => {
+test.serial('totalTimeout works with ky.create()', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -3520,7 +3520,7 @@ test('totalTimeout works with ky.create()', async t => {
 	t.is(requestCount, 1);
 });
 
-test('totalTimeout can be overridden via extend()', async t => {
+test.serial('totalTimeout can be overridden via extend()', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -3550,7 +3550,7 @@ test('totalTimeout can be overridden via extend()', async t => {
 	t.is(requestCount, 3);
 });
 
-test('totalTimeout can be disabled via extend()', async t => {
+test.serial('totalTimeout can be disabled via extend()', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -3580,7 +3580,7 @@ test('totalTimeout can be disabled via extend()', async t => {
 	t.is(requestCount, 2);
 });
 
-test('totalTimeout with retryOnTimeout: true caps total time across retries', async t => {
+test.serial('totalTimeout with retryOnTimeout: true caps total time across retries', async t => {
 	let requestCount = 0;
 
 	const customFetch: typeof fetch = async () => {
@@ -4815,7 +4815,7 @@ test('a user abort during the retry delay throws the abort reason', async t => {
 });
 
 // `beforeError` hooks run after an error is produced, so they are not bounded by `totalTimeout`.
-test('totalTimeout does not bound a beforeError hook', async t => {
+test.serial('totalTimeout does not bound a beforeError hook', async t => {
 	const error = await t.throwsAsync(ky('https://example.com', {
 		totalTimeout: 500,
 		timeout: false,
@@ -5245,7 +5245,7 @@ test('`replaceOption` on a context keeps it a plain object', t => {
 });
 
 // `#fetch()` replaces `ky.request` with the clone it prepares for a possible retry, so a `TimeoutError` built after the request went out reported a request that was never sent, disagreeing with the `request` the `beforeError` hook is given. `#getResponseRequest()` already had the same contract for `HTTPError`.
-test('a TimeoutError names the request that was actually sent', async t => {
+test.serial('a TimeoutError names the request that was actually sent', async t => {
 	let sentRequest: Request | undefined;
 	let attempts = 0;
 
@@ -5265,7 +5265,7 @@ test('a TimeoutError names the request that was actually sent', async t => {
 	t.is((error as {request: Request}).request, sentRequest);
 });
 
-test('a TimeoutError raised while retrying names the request that was actually sent', async t => {
+test.serial('a TimeoutError raised while retrying names the request that was actually sent', async t => {
 	const sentRequests: Request[] = [];
 	let attempts = 0;
 
@@ -5350,7 +5350,7 @@ test('a numeric string from `retry.delay` is rejected', async t => {
 	t.is(requestCount, 1);
 });
 
-test('a user abort while Ky waits out the rest of the totalTimeout budget throws the abort reason', async t => {
+test.serial('a user abort while Ky waits out the rest of the totalTimeout budget throws the abort reason', async t => {
 	const controller = new AbortController();
 	const reason = new Error('Cancelled while waiting out the budget');
 	let attempts = 0;
