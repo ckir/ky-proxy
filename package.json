@@ -1,9 +1,9 @@
 {
-	"name": "ky",
+	"name": "ky-proxy",
 	"version": "2.2.0",
 	"description": "Tiny and elegant HTTP client based on the Fetch API",
 	"license": "MIT",
-	"repository": "sindresorhus/ky",
+	"repository": "ckir/ky-proxy",
 	"funding": "https://github.com/sindresorhus/ky?sponsor=1",
 	"author": {
 		"name": "Sindre Sorhus",
