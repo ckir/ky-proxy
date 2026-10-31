@@ -3623,7 +3623,7 @@ test('NetworkError wraps fetch network errors', async t => {
 	t.true(isNetworkError(error));
 	t.true(isKyError(error));
 	t.is(error.name, 'NetworkError');
-	t.true(error.request.url.includes('example.com'));
+	t.is(error.request.url, 'https://example.com/');
 	t.true(error.cause instanceof TypeError);
 	t.is((error.cause as TypeError).message, 'Failed to fetch');
 	t.is(error.message, 'Request failed due to a network error: GET https://example.com/');
